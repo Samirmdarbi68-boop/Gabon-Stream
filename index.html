@@ -6,7 +6,6 @@
     <title>Gabon Stream</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Ajout de la bibliothèque HLS.js pour la lecture des flux IPTV -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root {
@@ -330,7 +329,7 @@
             </div>
             <ul class="nav-menu">
                 <li class="nav-item active" onclick="location.reload()"><i class="fa-solid fa-house"></i> Accueil</li>
-                <li class="nav-item" onclick="openModal()"><i class="fa-solid fa-list"></i> Listes de Lecture (M3U)</li>
+                <li class="nav-item" id="menuOpenModal"><i class="fa-solid fa-list"></i> Listes de Lecture (M3U)</li>
                 <li class="nav-item"><i class="fa-solid fa-tv"></i> TV en Direct</li>
                 <li class="nav-item"><i class="fa-solid fa-film"></i> Vidéo à la Demande (VOD)</li>
                 <li class="nav-item"><i class="fa-solid fa-gear"></i> Paramètres</li>
@@ -350,11 +349,11 @@
 
         <div class="dashboard-grid">
             <div class="action-card-container">
-                <button class="add-playlist-btn" onclick="openModal()">
+                <button class="add-playlist-btn" id="btnOpenModal">
                     <i class="fa-solid fa-plus" style="color: var(--accent-yellow);"></i> Charger la liste M3U
                 </button>
                 <p class="welcome-msg" id="statusMessage">
-                    Cliquez sur le bouton ci-dessus pour charger les flux de la liste et afficher les chaînes.
+                    Cliquez sur le bouton pour charger les flux de la liste et afficher les chaînes.
                 </p>
             </div>
 
@@ -376,8 +375,8 @@
             <h3>Ajouter une source M3U / URL</h3>
             <input type="text" id="m3uInput" value="https://iptv-org.github.io/iptv/index.country.m3u" placeholder="Entrez l'URL...">
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
-                <button class="btn btn-primary" onclick="loadM3U()">Charger</button>
+                <button class="btn btn-secondary" id="btnCloseModal">Annuler</button>
+                <button class="btn btn-primary" id="btnLoadM3U">Charger</button>
             </div>
         </div>
     </div>
@@ -387,9 +386,16 @@
         const contentArea = document.getElementById('contentArea');
         const statusMessage = document.getElementById('statusMessage');
 
+        // Association sécurisée des boutons pour éviter les blocages d'événements
+        document.getElementById('btnOpenModal').addEventListener('click', openModal);
+        document.getElementById('menuOpenModal').addEventListener('click', openModal);
+        document.getElementById('btnCloseModal').addEventListener('click', closeModal);
+        document.getElementById('btnLoadM3U').addEventListener('click', loadM3U);
+
         function openModal() {
             modal.style.display = 'flex';
         }
+
         function closeModal() {
             modal.style.display = 'none';
         }
@@ -440,19 +446,29 @@
                 return;
             }
 
-            let html = '<div class="channels-grid">';
+            contentArea.innerHTML = '';
+            const grid = document.createElement('div');
+            grid.className = 'channels-grid';
+
             channels.forEach((ch) => {
-                const safeUrl = ch.url.replace(/'/g, "\\'");
-                const safeTitle = ch.title.replace(/'/g, "\\'");
-                html += `
-                    <div class="channel-card" onclick="playChannel('${safeUrl}', '${safeTitle}')">
-                        <img src="${ch.logo || 'https://via.placeholder.com/36'}" onerror="this.src='https://via.placeholder.com/36'">
-                        <span>${ch.title}</span>
-                    </div>
-                `;
+                const card = document.createElement('div');
+                card.className = 'channel-card';
+                
+                const img = document.createElement('img');
+                img.src = ch.logo || 'https://via.placeholder.com/36';
+                img.onerror = () => { img.src = 'https://via.placeholder.com/36'; };
+                
+                const span = document.createElement('span');
+                span.textContent = ch.title;
+
+                card.appendChild(img);
+                card.appendChild(span);
+                
+                card.addEventListener('click', () => playChannel(ch.url, ch.title));
+                grid.appendChild(card);
             });
-            html += '</div>';
-            contentArea.innerHTML = html;
+
+            contentArea.appendChild(grid);
         }
 
         function playChannel(videoUrl, title) {
@@ -460,15 +476,16 @@
                 <div class="video-container">
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; color: var(--accent-yellow);">
                         <span><i class="fa-solid fa-play"></i> ${title}</span>
-                        <span style="cursor: pointer; color: var(--text-muted);" onclick="loadM3U()"><i class="fa-solid fa-arrow-left"></i> Retour</span>
+                        <span id="backToChannels" style="cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-arrow-left"></i> Retour</span>
                     </div>
                     <video id="videoPlayer" controls autoplay></video>
                 </div>
             `;
 
+            document.getElementById('backToChannels').addEventListener('click', loadM3U);
+
             const video = document.getElementById('videoPlayer');
 
-            // Utilisation de HLS.js si le flux est au format m3u8
             if (Hls.isSupported() && videoUrl.includes('.m3u8')) {
                 const hls = new Hls();
                 hls.loadSource(videoUrl);
@@ -477,13 +494,11 @@
                     video.play().catch(() => {});
                 });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                // Support natif (Safari)
                 video.src = videoUrl;
                 video.addEventListener('loadedmetadata', () => {
                     video.play().catch(() => {});
                 });
             } else {
-                // Flux direct classique (MP4 / Streams HTTP)
                 video.src = videoUrl;
                 video.play().catch(() => {});
             }
