@@ -6,6 +6,8 @@
     <title>Gabon Stream</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Ajout de la bibliothèque HLS.js pour la lecture des flux IPTV -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root {
             --bg-dark: #0f172a;
@@ -36,7 +38,6 @@
                               radial-gradient(circle at 20% 80%, rgba(0, 158, 96, 0.15) 0%, transparent 40%);
         }
 
-        /* Sidebar */
         sidebar {
             width: 280px;
             background: var(--sidebar-bg);
@@ -113,7 +114,6 @@
             border-left: 4px solid var(--accent-yellow);
         }
 
-        /* Main Content */
         main {
             flex-grow: 1;
             display: flex;
@@ -171,7 +171,6 @@
             margin: 0 auto;
         }
 
-        /* Dynamic Content Area */
         .content-display-area {
             background: var(--card-bg);
             border-radius: 16px;
@@ -224,9 +223,8 @@
             overflow: hidden;
         }
 
-        /* Video Player Wrapper */
         .video-container {
-            display: none;
+            display: flex;
             flex-direction: column;
             gap: 12px;
         }
@@ -239,7 +237,6 @@
             outline: none;
         }
 
-        /* Footer Disclaimer */
         footer {
             font-size: 10px;
             color: var(--text-muted);
@@ -250,7 +247,6 @@
             line-height: 1.4;
         }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -333,7 +329,7 @@
                 </div>
             </div>
             <ul class="nav-menu">
-                <li class="nav-item active"><i class="fa-solid fa-house"></i> Accueil</li>
+                <li class="nav-item active" onclick="location.reload()"><i class="fa-solid fa-house"></i> Accueil</li>
                 <li class="nav-item" onclick="openModal()"><i class="fa-solid fa-list"></i> Listes de Lecture (M3U)</li>
                 <li class="nav-item"><i class="fa-solid fa-tv"></i> TV en Direct</li>
                 <li class="nav-item"><i class="fa-solid fa-film"></i> Vidéo à la Demande (VOD)</li>
@@ -355,11 +351,10 @@
         <div class="dashboard-grid">
             <div class="action-card-container">
                 <button class="add-playlist-btn" onclick="openModal()">
-                    <i class="fa-solid fa-plus" style="color: var(--accent-yellow);"></i> Ajouter une liste de lecture (M3U/URL)
+                    <i class="fa-solid fa-plus" style="color: var(--accent-yellow);"></i> Charger la liste M3U
                 </button>
                 <p class="welcome-msg" id="statusMessage">
-                    Bienvenue sur Gabon Stream. Votre lecteur est prêt.<br>
-                    Importez votre source M3U pour charger les flux.
+                    Cliquez sur le bouton ci-dessus pour charger les flux de la liste et afficher les chaînes.
                 </p>
             </div>
 
@@ -372,14 +367,14 @@
         </div>
 
         <footer>
-            AVERTISSEMENT : Gabon Stream ne fournit aucun contenu. L'utilisateur est seul responsable des listes de lecture importées et de leur légalité. Ne pas importer de contenu protégé par des droits d'auteur.
+            AVERTISSEMENT : Gabon Stream ne fournit aucun contenu. L'utilisateur est seul responsable des listes de lecture importées et de leur légalité.
         </footer>
     </main>
 
     <div class="modal" id="playlistModal">
         <div class="modal-content">
             <h3>Ajouter une source M3U / URL</h3>
-            <input type="text" id="m3uInput" value="https://iptv-org.github.io/iptv/index.country.m3u" placeholder="Entrez l'URL de votre lien M3U...">
+            <input type="text" id="m3uInput" value="https://iptv-org.github.io/iptv/index.country.m3u" placeholder="Entrez l'URL...">
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
                 <button class="btn btn-primary" onclick="loadM3U()">Charger</button>
@@ -404,16 +399,15 @@
             if (!url) return;
 
             closeModal();
-            contentArea.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--accent-yellow); gap: 10px;"><i class="fa-solid fa-rotate-right fa-spin"></i><span>Chargement des flux...</span></div>`;
+            contentArea.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--accent-yellow); gap: 10px;"><i class="fa-solid fa-rotate-right fa-spin"></i><span>Chargement de la liste...</span></div>`;
 
             try {
                 const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
                 const data = await response.text();
-                
                 parseAndDisplayM3U(data);
-                statusMessage.innerHTML = "Source M3U chargée avec succès !<br>Sélectionnez une chaîne dans la liste.";
+                statusMessage.innerHTML = "Liste chargée avec succès !<br>Cliquez sur une chaîne pour lancer la lecture.";
             } catch (error) {
-                contentArea.innerHTML = `<div style="text-align: center; color: #ef4444; padding-top: 50px;">Erreur lors du chargement du fichier M3U. Vérifiez l'URL.</div>`;
+                contentArea.innerHTML = `<div style="text-align: center; color: #ef4444; padding-top: 50px;">Erreur de chargement de l'URL M3U.</div>`;
             }
         }
 
@@ -428,7 +422,6 @@
                 if (line.startsWith('#EXTINF:')) {
                     const logoMatch = line.match(/tvg-logo="([^"]*)"/);
                     currentLogo = logoMatch ? logoMatch[1] : '';
-                    
                     const commaIdx = line.lastIndexOf(',');
                     if (commaIdx !== -1) {
                         currentTitle = line.substring(commaIdx + 1).trim();
@@ -443,7 +436,7 @@
             }
 
             if (channels.length === 0) {
-                contentArea.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding-top: 50px;">Aucune chaîne valide trouvée dans cette liste.</div>`;
+                contentArea.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding-top: 50px;">Aucune chaîne trouvée.</div>`;
                 return;
             }
 
@@ -464,20 +457,36 @@
 
         function playChannel(videoUrl, title) {
             contentArea.innerHTML = `
-                <div class="video-container" style="display: flex;">
+                <div class="video-container">
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; color: var(--accent-yellow);">
                         <span><i class="fa-solid fa-play"></i> ${title}</span>
-                        <span style="cursor: pointer; color: var(--text-muted);" onclick="location.reload()"><i class="fa-solid fa-arrow-left"></i> Retour aux chaînes</span>
+                        <span style="cursor: pointer; color: var(--text-muted);" onclick="loadM3U()"><i class="fa-solid fa-arrow-left"></i> Retour</span>
                     </div>
-                    <video id="videoPlayer" controls autoplay>
-                        <source src="${videoUrl}" type="application/x-mpegURL">
-                        <source src="${videoUrl}" type="video/mp4">
-                        Votre navigateur ne supporte pas la lecture de ce flux.
-                    </video>
+                    <video id="videoPlayer" controls autoplay></video>
                 </div>
             `;
+
             const video = document.getElementById('videoPlayer');
-            video.play().catch(() => {});
+
+            // Utilisation de HLS.js si le flux est au format m3u8
+            if (Hls.isSupported() && videoUrl.includes('.m3u8')) {
+                const hls = new Hls();
+                hls.loadSource(videoUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    video.play().catch(() => {});
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Support natif (Safari)
+                video.src = videoUrl;
+                video.addEventListener('loadedmetadata', () => {
+                    video.play().catch(() => {});
+                });
+            } else {
+                // Flux direct classique (MP4 / Streams HTTP)
+                video.src = videoUrl;
+                video.play().catch(() => {});
+            }
         }
     </script>
 </body>
