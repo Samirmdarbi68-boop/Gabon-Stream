@@ -2,422 +2,410 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gabon Stream</title>
-    
-    <!-- Intégration de HLS.js pour lire les flux IPTV (.m3u8) -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    
-    <!-- Icônes -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
-        /* --- VARIABLES ET THÈME --- */
         :root {
-            --bg-color: #121212;
-            --surface-color: #1e1e1e;
-            --text-color: #ffffff;
-            --text-muted: #aaaaaa;
-            --gabon-green: #009E60;
-            --gabon-yellow: #FCD116;
-            --gabon-blue: #3A75C4;
+            --bg-dark: #0f172a;
+            --sidebar-bg: rgba(15, 23, 42, 0.85);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-green: #009E60;
+            --accent-yellow: #FCD116;
+            --accent-blue: #0085C7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            padding-bottom: 70px; /* Espace pour la barre de navigation */
-        }
-
-        /* --- EN-TÊTE --- */
-        header {
-            background-color: var(--surface-color);
-            padding: 15px 20px;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-text {
-            font-size: 1.2rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-        }
-
-        .gabon-dots {
-            display: flex;
-            gap: 4px;
-        }
-
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-        .dot.green { background-color: var(--gabon-green); }
-        .dot.yellow { background-color: var(--gabon-yellow); }
-        .dot.blue { background-color: var(--gabon-blue); }
-
-        /* --- LECTEUR VIDÉO --- */
-        .video-container {
-            width: 100%;
-            background-color: #000;
-            aspect-ratio: 16/9;
-            position: relative;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .now-playing {
-            padding: 15px;
-            background: linear-gradient(to right, var(--surface-color), var(--bg-color));
-            border-left: 4px solid var(--gabon-green);
-            margin: 10px 15px;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .now-playing h3 {
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-        .now-playing p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        /* --- CONTENU ET ONGLETS --- */
-        .tab-content {
-            display: none;
-            padding: 15px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- GRILLES (LIVE, VOD) --- */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 15px;
-        }
-
-        .card {
-            background-color: var(--surface-color);
-            border-radius: 10px;
             overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s;
+            background-image: radial-gradient(circle at 80% 20%, rgba(0, 133, 199, 0.15) 0%, transparent 40%),
+                              radial-gradient(circle at 20% 80%, rgba(0, 158, 96, 0.15) 0%, transparent 40%);
         }
 
-        .card:active {
-            transform: scale(0.95);
+        /* Sidebar */
+        sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            justify-content: space-between;
         }
 
-        .card-img-placeholder {
-            width: 100%;
-            aspect-ratio: 2/3;
-            background-color: #2a2a2a;
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-yellow), var(--accent-blue));
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            color: var(--text-muted);
-        }
-
-        .card-live-img {
-            aspect-ratio: 16/9;
-        }
-
-        .card-info {
-            padding: 10px;
-        }
-
-        .card-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .card-subtitle {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
             font-weight: bold;
-            background-color: var(--gabon-blue);
+            font-size: 20px;
             color: white;
-            margin-bottom: 5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
-        .badge.live { background-color: var(--gabon-green); }
+        .brand-text h1 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
 
-        /* --- BARRE DE NAVIGATION INFÉRIEURE --- */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: var(--surface-color);
+        .brand-text span {
+            font-size: 11px;
+            color: var(--accent-yellow);
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .nav-menu {
+            list-style: none;
             display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            padding-bottom: env(safe-area-inset-bottom, 10px); /* Support iPhone */
-            border-top: 1px solid #333;
-            z-index: 100;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
         }
 
         .nav-item {
             display: flex;
-            flex-direction: column;
             align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            border-radius: 10px;
             color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.75rem;
-            gap: 5px;
             cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
         }
 
         .nav-item i {
-            font-size: 1.2rem;
+            font-size: 16px;
+            width: 20px;
         }
 
-        .nav-item.active {
-            color: var(--gabon-yellow);
+        .nav-item:hover, .nav-item.active {
+            background: rgba(252, 209, 22, 0.12);
+            color: var(--text-main);
+            border-left: 4px solid var(--accent-yellow);
+        }
+
+        /* Main Content */
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 32px;
+            position: relative;
+            justify-content: space-between;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .action-card-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .add-playlist-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 16px;
+            color: var(--text-main);
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            backdrop-filter: blur(8px);
+        }
+
+        .add-playlist-btn:hover {
+            border-color: var(--accent-yellow);
+            transform: translateY(-2px);
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+        .welcome-msg {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
+            text-align: center;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Video Preview */
+        .video-preview {
+            background: #000;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            aspect-ratio: 16/9;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px;
+            position: relative;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+
+        .video-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            color: var(--text-muted);
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .video-placeholder i {
+            font-size: 32px;
+            color: var(--text-muted);
+        }
+
+        .video-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 8px 14px;
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+        }
+
+        .video-controls i {
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            flex-grow: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 30%;
+            background: var(--accent-yellow);
+            border-radius: 2px;
+        }
+
+        /* Footer Disclaimer */
+        footer {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-align: center;
+            opacity: 0.7;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .modal-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .modal-content input:focus {
+            border-color: var(--accent-yellow);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-muted);
+        }
+
+        .btn-primary {
+            background: var(--accent-yellow);
+            color: #0f172a;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
 
-    <!-- EN-TÊTE -->
-    <header>
-        <div class="logo-container">
-            <div class="logo-text">GABON STREAM</div>
-            <div class="gabon-dots">
-                <div class="dot green"></div>
-                <div class="dot yellow"></div>
-                <div class="dot blue"></div>
+    <sidebar>
+        <div>
+            <div class="brand">
+                <div class="brand-logo"><i class="fa-solid fa-play" style="font-size: 18px;"></i></div>
+                <div class="brand-text">
+                    <h1>GABON</h1>
+                    <span>STREAM</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active"><i class="fa-solid fa-house"></i> Accueil</li>
+                <li class="nav-item"><i class="fa-solid fa-list"></i> Listes de Lecture (M3U)</li>
+                <li class="nav-item"><i class="fa-solid fa-tv"></i> TV en Direct</li>
+                <li class="nav-item"><i class="fa-solid fa-film"></i> Vidéo à la Demande (VOD)</li>
+                <li class="nav-item"><i class="fa-solid fa-gear"></i> Paramètres</li>
+            </ul>
+        </div>
+    </sidebar>
+
+    <main>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 8px; height: 8px; background: var(--accent-green); border-radius: 50%;"></div>
+                <div style="width: 8px; height: 8px; background: var(--accent-yellow); border-radius: 50%;"></div>
+                <div style="width: 8px; height: 8px; background: var(--accent-blue); border-radius: 50%;"></div>
+                <span style="font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px;">GABON STREAM WEB</span>
             </div>
         </div>
-        <i class="fas fa-search"></i>
-    </header>
 
-    <!-- ÉCRAN 1 : CHAÎNES LIVE -->
-    <div id="tab-live" class="tab-content active">
-        <!-- Lecteur Vidéo -->
-        <div class="video-container">
-            <video id="video-player" controls autoplay></video>
-        </div>
-        
-        <div class="now-playing">
-            <span class="badge live">EN DIRECT</span>
-            <h3 id="current-title">Test Stream HLS</h3>
-            <p id="current-desc">Sélectionnez une chaîne ci-dessous</p>
+        <div class="dashboard-grid">
+            <div class="action-card-container">
+                <button class="add-playlist-btn" onclick="openModal()">
+                    <i class="fa-solid fa-plus" style="color: var(--accent-yellow);"></i> Ajouter une liste de lecture (M3U/URL)
+                </button>
+                <p class="welcome-msg">
+                    Bienvenue sur Gabon Stream. Votre lecteur est prêt.<br>
+                    Importez vos propres sources légales pour commencer.
+                </p>
+            </div>
+
+            <div class="video-preview">
+                <div class="video-placeholder">
+                    <i class="fa-solid fa-rotate-right fa-spin" style="animation-duration: 3s;"></i>
+                    <span>Chargement en attente</span>
+                </div>
+                <div class="video-controls">
+                    <i class="fa-solid fa-play"></i>
+                    <div class="progress-bar"></div>
+                    <i class="fa-solid fa-volume-high"></i>
+                    <i class="fa-solid fa-expand"></i>
+                </div>
+            </div>
         </div>
 
-        <h3 style="margin-bottom: 15px;">Chaînes Disponibles</h3>
-        <div class="grid-container" id="live-grid">
-            <!-- Les chaînes seront injectées par JavaScript -->
+        <footer>
+            AVERTISSEMENT : Gabon Stream ne fournit aucun contenu. L'utilisateur est seul responsable des listes de lecture importées et de leur légalité. Ne pas importer de contenu protégé par des droits d'auteur.
+        </footer>
+    </main>
+
+    <!-- Modal d'ajout M3U -->
+    <div class="modal" id="playlistModal">
+        <div class="modal-content">
+            <h3>Ajouter une source M3U / URL</h3>
+            <input type="text" id="m3uInput" placeholder="Entrez l'URL de votre lien M3U...">
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+                <button class="btn btn-primary" onclick="savePlaylist()">Charger</button>
+            </div>
         </div>
     </div>
 
-    <!-- ÉCRAN 2 : FILMS (VOD) -->
-    <div id="tab-movies" class="tab-content">
-        <h2 style="margin-bottom: 15px;">Films Récents</h2>
-        <div class="grid-container" id="movies-grid">
-            <!-- Les films seront injectés par JavaScript -->
-        </div>
-    </div>
-
-    <!-- ÉCRAN 3 : SÉRIES (VOD) -->
-    <div id="tab-series" class="tab-content">
-        <h2 style="margin-bottom: 15px;">Séries Tendances</h2>
-        <div class="grid-container" id="series-grid">
-            <!-- Les séries seront injectées par JavaScript -->
-        </div>
-    </div>
-
-    <!-- BARRE DE NAVIGATION INFÉRIEURE -->
-    <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('live', this)">
-            <i class="fas fa-tv"></i>
-            <span>Live</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('movies', this)">
-            <i class="fas fa-film"></i>
-            <span>Films</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('series', this)">
-            <i class="fas fa-video"></i>
-            <span>Séries</span>
-        </div>
-    </nav>
-
-    <!-- LOGIQUE JAVASCRIPT -->
     <script>
-        // --- GESTION DE LA NAVIGATION ---
-        function switchTab(tabId, element) {
-            // Cacher tous les onglets
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            // Désactiver tous les boutons
-            document.querySelectorAll('.nav-item').forEach(nav => {
-                nav.classList.remove('active');
-            });
-
-            // Activer le bon onglet et bouton
-            document.getElementById('tab-' + tabId).classList.add('active');
-            element.classList.add('active');
-            
-            // Mettre la vidéo en pause si on quitte le direct
-            if(tabId !== 'live') {
-                document.getElementById('video-player').pause();
+        const modal = document.getElementById('playlistModal');
+        function openModal() {
+            modal.style.display = 'flex';
+        }
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+        function savePlaylist() {
+            const url = document.getElementById('m3uInput').value;
+            if(url) {
+                alert('Source prise en compte : ' + url);
+                closeModal();
+            } else {
+                alert('Veuillez entrer une URL valide.');
             }
         }
-
-        // --- GESTION DU LECTEUR VIDÉO (HLS.js) ---
-        const video = document.getElementById('video-player');
-        let hls;
-
-        function playStream(url, title, desc) {
-            // Mettre à jour l'interface
-            document.getElementById('current-title').innerText = title;
-            document.getElementById('current-desc').innerText = desc;
-
-            // Logique de lecture HLS
-            if (Hls.isSupported()) {
-                if(hls) hls.destroy(); // Nettoyer l'ancienne instance
-                hls = new Hls();
-                hls.loadSource(url);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    video.play();
-                });
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                // Pour Safari (Mac/iOS) qui supporte le HLS nativement
-                video.src = url;
-                video.addEventListener('loadedmetadata', function() {
-                    video.play();
-                });
-            }
-        }
-
-        // --- DONNÉES FACTICES POUR DÉMO ---
-        const liveChannels = [
-            { title: "Gabon 1ère", category: "Généraliste", streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }, // Lien de test valide
-            { title: "Télé Africa", category: "Divertissement", streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-            { title: "Sport TV", category: "Sport", streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
-        ];
-
-        const movies = [
-            { title: "Le Prix du Succès", year: "2024", genre: "Drame" },
-            { title: "Action Max", year: "2023", genre: "Action" },
-            { title: "Comédie Club", year: "2024", genre: "Comédie" },
-            { title: "Nuit Noire", year: "2022", genre: "Thriller" }
-        ];
-
-        const series = [
-            { title: "Inspecteur G", season: "Saison 1", genre: "Policier" },
-            { title: "Héritage", season: "Saison 3", genre: "Drame" },
-            { title: "Lycée Central", season: "Saison 2", genre: "Ado" }
-        ];
-
-        // --- INITIALISATION DE L'INTERFACE ---
-        function initApp() {
-            // 1. Remplir la grille Live
-            const liveGrid = document.getElementById('live-grid');
-            liveChannels.forEach(channel => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div class="card-img-placeholder card-live-img"><i class="fas fa-play-circle"></i></div>
-                    <div class="card-info">
-                        <span class="badge live">LIVE</span>
-                        <div class="card-title">${channel.title}</div>
-                        <div class="card-subtitle">${channel.category}</div>
-                    </div>
-                `;
-                card.onclick = () => playStream(channel.streamUrl, channel.title, channel.category);
-                liveGrid.appendChild(card);
-            });
-
-            // 2. Remplir la grille Films
-            const moviesGrid = document.getElementById('movies-grid');
-            movies.forEach(movie => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div class="card-img-placeholder"><i class="fas fa-film"></i></div>
-                    <div class="card-info">
-                        <span class="badge">${movie.genre}</span>
-                        <div class="card-title">${movie.title}</div>
-                        <div class="card-subtitle">${movie.year}</div>
-                    </div>
-                `;
-                moviesGrid.appendChild(card);
-            });
-
-            // 3. Remplir la grille Séries
-            const seriesGrid = document.getElementById('series-grid');
-            series.forEach(serie => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div class="card-img-placeholder"><i class="fas fa-video"></i></div>
-                    <div class="card-info">
-                        <span class="badge" style="background-color: var(--gabon-yellow); color: black;">${serie.season}</span>
-                        <div class="card-title">${serie.title}</div>
-                        <div class="card-subtitle">${serie.genre}</div>
-                    </div>
-                `;
-                seriesGrid.appendChild(card);
-            });
-
-            // 4. Lancer le premier flux de test par défaut
-            if(liveChannels.length > 0) {
-                playStream(liveChannels[0].streamUrl, liveChannels[0].title, liveChannels[0].category);
-            }
-        }
-
-        // Lancer l'initialisation au chargement de la page
-        window.onload = initApp;
     </script>
 </body>
 </html>
